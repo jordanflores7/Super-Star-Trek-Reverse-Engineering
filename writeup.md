@@ -1,0 +1,9 @@
+CECS 478 Hacking Malware Write Up
+
+The original password was "grcehppr" and proved to be a challenge to find. I first found the dsetrct function by searching for the "PASSWORD REJECTED" string. The decompiler and the assembly code both pointed to an empty variable called citem, which was a dead end. I then found another variable, ffzagg, which was also an empty string. This made me realize the password must be created at runtime. I followed the "Write" cross-reference for ffzagg and it led me to the choose function. This function contained the line _ffzagg = 0x7270706865637267;. I realized this was the password in hex. After reversing the little-endian bytes to 67 72 63 65 68 70 70 72, I translated them from ASCII to find the original password: grcehppr.
+
+Bypassing the password was also a process of trial and error. I knew I had to neutralize the 6-byte JNZ instruction at offset 00402b5d that jumps to the "PASSWORD REJECTED" code. My first attempt to replace it with a 1-byte NOP left junk data and would have crashed the game. The correct solution was to use the Window -> Bytes hex editor. I first had to press C to "Clear Code" on the JNZ line to remove Ghidra's protection. Then I enabled editing in the Bytes window and manually replaced all 6 original bytes, 0f 85 ab 00 00 00, with six new NOP bytes, 90 90 90 90 90 90. This worked perfectly, letting the program fall through to the "PASSWORD ACCEPTED" code.
+
+This was a tough but rewarding assignment. The biggest lesson I learned was not to trust the decompiler; the assembly code, and in this case the write references, were the real source of truth. I also patched the credits string at offset 0041e154, changing the original "Hacked by anthonyvg" to "Hacked by AG AND JF", making sure to keep the string the exact same length. It was a great feeling to finally patch the file, run ./sst, see my name in the credits, and get "PASSWORD ACCEPTED".
+
+
